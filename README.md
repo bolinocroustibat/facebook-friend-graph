@@ -16,6 +16,5 @@ All the details are available [in this blog post](https://ndres.me/post/friend-g
 
 ## Acknowledgement
 
-Original notebook author: [Lucas Allen](https://twitter.com/lucasallenio), [original code](https://github.com/lgallen/twitter-graph)
-
-Original scrapping code (Python 2) [here](https://github.com/giladravid/FacebookFOF)
+Original notebook author: [here](https://github.com/lgallen/twitter-graph)
+Original scraping code (Python 2): [here](https://github.com/giladravid/FacebookFOF)
