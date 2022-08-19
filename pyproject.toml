@@ -39,6 +39,10 @@ tqdm = "^4.64.0"
 selenium = "^4.4.3"
 
 
+[tool.poetry.group.dev.dependencies]
+black = "^22.6.0"
+isort = "^5.10.1"
+
 [tool.pdm]
 [tool.pdm.build]
 includes = ["facebook_friend_graph"]

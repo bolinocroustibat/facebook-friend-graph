@@ -1,23 +1,36 @@
-from html.parser import HTMLParser
+import getpass
+import json
+import os
+import pickle
 import re
 import time
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
-import os
-from tqdm import tqdm
-import pickle
-import getpass
+from html.parser import HTMLParser
+from typing import Optional
 
-username = input("Facebook username:")
-password = getpass.getpass('Password:')
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from tqdm import tqdm
+
+UNIQ_FILENAME = "uniq_urls.pickle"
+GRAPH_FILENAME = "friend_graph.pickle"
+
+# Facebook credentials
+try:
+    facebook_credentials_file = open("facebook_credentials.json")
+    credentials: dict = json.load(facebook_credentials_file)
+    username = credentials["username"]
+    password = credentials["password"]
+except:
+    username = input("Facebook username:")
+    password = getpass.getpass("Password:")
 
 chrome_options = webdriver.ChromeOptions()
-prefs = {"profile.default_content_setting_values.notifications" : 2}
-chrome_options.add_experimental_option("prefs",prefs)
+prefs = {"profile.default_content_setting_values.notifications": 2}
+chrome_options.add_experimental_option("prefs", prefs)
 driver = webdriver.Chrome(options=chrome_options)
 
-driver.get('https://www.facebook.com/')
+driver.get("https://www.facebook.com/")
 
 # authenticate to facebook account
 elem = driver.find_element(By.ID, "email")
@@ -53,14 +66,13 @@ def get_fb_page(url: str):
     return html_source
 
 
-def find_friend_from_url(url: str):
-    if re.search('com\/profile.php\?id=\d+\&', url) is not None:
-        m = re.search('com\/profile.php\?id=(\d+)\&', url)
-        friend = m.group(1)
+def find_friend_from_url(url: str) -> Optional[str]:
+    if re.search("/friends_mutual", url) is not None:
+        return re.search(
+            r"https://www.facebook.com/([^/?]+)/friends_mutual", url
+        ).group(1)
     else:
-        m = re.search('com\/(.*)\?', url)
-        friend = m.group(1)
-    return friend
+        return re.search(r"https://www.facebook.com/([^/?]+)", url).group(1)
 
 
 class MyHTMLParser(HTMLParser):
@@ -76,70 +88,65 @@ class MyHTMLParser(HTMLParser):
             for name, value in attrs:
                 # If href is defined, print it.
                 if name == "href":
-                    print("found link")
-                    print(value)
-                    if re.search('https://www.facebook.com/', value) is not None:
-                        print("valid link")
-                        if re.search('.com/pages|/friends/', value) is None:
-                            print('not useless fb link')
+                    if re.search("https://www.facebook.com/", value) is not None:
+                        if (
+                            re.search(
+                                "facebook.com/pages|facebook.com/stories|facebook.com/events|facebook.com/groups|facebook.com/notifications|profile.php",
+                                value,
+                            )
+                            is None
+                        ):
                             self.urls.append(value)
 
 
-my_url = f'https://www.facebook.com/{username}/friends'
+my_url = f"https://www.facebook.com/{username}/friends"
 
-UNIQ_FILENAME = 'uniq_urls.pickle'
 if os.path.isfile(UNIQ_FILENAME):
-    with open(UNIQ_FILENAME, 'rb') as f:
+    with open(UNIQ_FILENAME, "rb") as f:
         uniq_urls = pickle.load(f)
-    print(f'We loaded {uniq_urls} unique friends')
+    print(f"We loaded {uniq_urls} unique friends")
 else:
     friends_page = get_fb_page(my_url)
     parser = MyHTMLParser()
     parser.feed(friends_page)
     uniq_urls = set(parser.urls)
 
-    print(f'We found {len(uniq_urls)} friends, saving it')
+    print(f"We found {len(uniq_urls)} friends pages, saving them in a file")
 
     if uniq_urls:
-        with open(UNIQ_FILENAME, 'wb') as f:
+        with open(UNIQ_FILENAME, "wb") as f:
             pickle.dump(uniq_urls, f)
 
 friend_graph = {}
-GRAPH_FILENAME = 'friend_graph.pickle'
 
 if os.path.isfile(GRAPH_FILENAME):
-    with open(GRAPH_FILENAME, 'rb') as f:
+    with open(GRAPH_FILENAME, "rb") as f:
         friend_graph = pickle.load(f)
-    print(f'Loaded existing graph, found {len(friend_graph.keys())} keys')
-
+    print(f"Loaded existing graph, found {len(friend_graph.keys())} keys")
 
 
 for url in tqdm(uniq_urls):
     friend_username = find_friend_from_url(url)
-
-    # remove friends with no mutuals to run them again
-    # this accomodates for being blocked by fb and needing to re-run
-    if friend_graph[friend_username] == [username]:
-        del friend_graph[friend_username]
+    print(f"Found friend: {friend_username}")
 
     if friend_username in friend_graph.keys():
         continue
 
     friend_graph[friend_username] = [username]
-    mutual_url = f'https://www.facebook.com/{friend_username}/friends_mutual'
+    mutual_url = f"https://www.facebook.com/{friend_username}/friends_mutual"
     mutual_page = get_fb_page(mutual_url)
 
     parser = MyHTMLParser()
     parser.urls = []
     parser.feed(mutual_page)
     mutual_friends_urls = set(parser.urls)
-    print('Found {} urls'.format(len(mutual_friends_urls)))
+    print("Found {} urls".format(len(mutual_friends_urls)))
 
     for mutual_url in mutual_friends_urls:
         mutual_friend = find_friend_from_url(mutual_url)
         friend_graph[friend_username].append(mutual_friend)
 
-    with open(GRAPH_FILENAME, 'wb') as f:
+    with open(GRAPH_FILENAME, "wb") as f:
         pickle.dump(friend_graph, f)
 
 driver.quit()

@@ -1,4 +1,6 @@
+poetry.lock
+
 uniq_urls.pickle
 friend_graph.pickle
 
-poetry.lock
+facebook_credentials.json
