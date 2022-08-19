@@ -6,6 +6,12 @@ Plotting your friend network using Plotly, NetworkX and python-louvain
 
 ## Installation and usage
 
+First, install Chromedriver
+
+```bash
+brew install chromedriver --cask
+```
+
 All the details are available [in this blog post](https://ndres.me/post/friend-graph-tutorial/)
 
 ## Acknowledgement

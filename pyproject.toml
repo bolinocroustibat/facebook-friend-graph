@@ -1,0 +1,47 @@
+[project]
+# PEP 621 project metadata
+# See https://www.python.org/dev/peps/pep-0621/
+authors = [{ name = "Adrien Carpentier", email = "me@adriencarpentier.com" }]
+requires-python = ">=3.9,<4.0"
+dependencies = [
+    "python-louvain<1.0,>=0.16",
+    "networkx<3.0.0,>=2.8.5",
+    "colorlover<1.0.0,>=0.3.0",
+    "numpy<2.0.0,>=1.23.2",
+    "plotly<6.0.0,>=5.10.0",
+    "tqdm<5.0.0,>=4.64.0",
+    "selenium<5.0.0,>=4.4.3",
+]
+name = "facebook-friend-graph"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+
+[project.urls]
+
+
+[tool.poetry]
+name = "facebook-friend-graph"
+version = "0.1.0"
+description = ""
+authors = ["Adrien Carpentier <me@adriencarpentier.com>"]
+readme = "README.md"
+packages = [{ include = "facebook_friend_graph" }]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+python-louvain = "^0.16"
+networkx = "^2.8.5"
+colorlover = "^0.3.0"
+numpy = "^1.23.2"
+plotly = "^5.10.0"
+tqdm = "^4.64.0"
+selenium = "^4.4.3"
+
+
+[tool.pdm]
+[tool.pdm.build]
+includes = ["facebook_friend_graph"]
+[build-system]
+requires = ["pdm-pep517>=1.0.0"]
+build-backend = "pdm.pep517.api"
